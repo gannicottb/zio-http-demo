@@ -1,29 +1,20 @@
+import controllers.{MatchupController, TypeController}
 import model.{Matchup, Type}
 import zhttp.http._
 import zhttp.service.Server
-import zio._
+import zio.{UIO, _}
+
+import java.io.IOException
 
 /** Pokemon Type API
   */
 object Main extends ZIOAppDefault {
 
-  val api: HttpApp[Any, Nothing] = Http.collect[Request] { case req @ Method.GET -> !! / "matchup" =>
-    def parseTypeFromParam(key: String): Option[Type] = for {
-      // Get all of the params for the two keys we care about
-      params <- req.url.queryParams.get(key)
-      // Just take the first value
-      firstParam <- params.headOption
-      // Then look up the value to get the Type
-      theType <- Type.ofNameInsensitive(firstParam)
-    } yield theType
-
-    (for {
-      attackerType <- parseTypeFromParam("attacker")
-      defenderType <- parseTypeFromParam("defender")
-    } yield {
-      val multiplier = Matchup.compute(attackerType, defenderType)
-      Response.text(s"${attackerType.name} is ${multiplier}x against ${defenderType.name}")
-    }).getOrElse(Response.status(Status.BAD_REQUEST))
+  val api: HttpApp[Console, IOException] = Http.collectZIO[Request] {
+    case req @ Method.GET -> !! / "matchup" => MatchupController.show(req)
+    case Method.GET -> "type" /: id =>
+      UIO(id.toString().drop(1)) // zio-http does not have good support for request matching, sadly.
+        .flatMap(TypeController.show)
   }
 
   // Run it like any simple app
