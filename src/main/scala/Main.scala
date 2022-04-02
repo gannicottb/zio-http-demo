@@ -12,9 +12,7 @@ object Main extends ZIOAppDefault {
 
   val api: HttpApp[Console, IOException] = Http.collectZIO[Request] {
     case req @ Method.GET -> !! / "matchup" => MatchupController.show(req)
-    case Method.GET -> "type" /: id =>
-      UIO(id.toString().drop(1)) // zio-http does not have good support for request matching, sadly.
-        .flatMap(TypeController.show)
+    case Method.GET -> !! / "type" / id => TypeController.show(id)
   }
 
   // Run it like any simple app
