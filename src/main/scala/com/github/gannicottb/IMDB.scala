@@ -1,10 +1,13 @@
+package com.github.gannicottb
+
 import kantan.codecs.Codec
-import zhttp.service.{ChannelFactory, Client, EventLoopGroup}
-import zio.stream.{Stream, ZChannel, ZPipeline, ZStream}
 import kantan.csv._
-import kantan.csv.ops._
 import kantan.csv.generic._
+import kantan.csv.ops.toCsvRowReadingOps
+import zhttp.service.{ChannelFactory, Client, EventLoopGroup}
+import zio.Task
 import zio.stream.ZPipeline._
+import zio.stream.{Stream, ZPipeline, ZStream}
 
 object IMDB extends DataSource {
   // Downloaded from https://datasets.imdbws.com/
@@ -16,19 +19,25 @@ object IMDB extends DataSource {
     byte <- Stream.fromChunk(body)
   } yield byte
 
+  def streamRows = local
+    .via(gunzip() >>> utf8Decode >>> splitLines >>> IMDB.removeInvalidEscapeCharacters)
+    .drop(1) // drop the header
+    .map(row => AkaEntry.fromRow(row).toOption)
+    .collectSome
+
   val removeInvalidEscapeCharacters: ZPipeline[Any, Nothing, String, String] =
     ZPipeline.map[String, String](_.replaceAll("\\\\[^btnfr\"]", ""))
 
   // Machinery to parse data
   case class AkaEntry(
       titleId: String,
-      ordering: Int,
+      ordering: Option[Int],
       title: String,
       region: String,
       language: String,
       types: Seq[String],
       attributes: Seq[String],
-      isOriginalTitle: Int
+      isOriginalTitle: Option[Int]
   )
   object AkaEntry {
     implicit val SeqCodec: Codec[String, Seq[String], DecodeError, codecs.type] =
@@ -37,7 +46,7 @@ object IMDB extends DataSource {
         DecodeResult(s.split(" ").toSeq)
       )(d => d.mkString(" "))
 
-    def empty = AkaEntry("", 1, "", "", "", Seq[String](), Seq[String](), 1)
+    def empty = AkaEntry("", None, "", "", "", Seq[String](), Seq[String](), None)
     def fromRow(row: String) = row.readCsvRow[AkaEntry](rfc.withCellSeparator('\t'))
   }
 

@@ -1,10 +1,10 @@
-import FMA.AlbumEntry
-import IMDB.AkaEntry
-import zhttp.http.Headers
-import zhttp.service.{ChannelFactory, Client, EventLoopGroup}
-import zio._
-import zio.stream._
-import zio.stream.ZPipeline._
+package com.github.gannicottb
+
+import com.github.gannicottb.FMA.AlbumEntry
+import com.github.gannicottb.IMDB.AkaEntry
+import zhttp.service.{ChannelFactory, EventLoopGroup}
+import zio.stream.ZPipeline.{gunzip, splitLines, utf8Decode}
+import zio.{Console, Task, ZIOAppDefault}
 
 object ClientExample extends ZIOAppDefault {
   val env = ChannelFactory.auto ++ EventLoopGroup.auto()

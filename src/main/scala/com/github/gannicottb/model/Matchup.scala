@@ -1,4 +1,4 @@
-package model
+package com.github.gannicottb.model
 
 /** Represent the matchup between two types.
   * @param attacker

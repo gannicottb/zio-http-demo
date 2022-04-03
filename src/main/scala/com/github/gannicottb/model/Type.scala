@@ -1,4 +1,4 @@
-package model
+package com.github.gannicottb.model
 
 /** Model the Pokemon types. The generation should point to
   * @param name

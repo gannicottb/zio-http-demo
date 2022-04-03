@@ -1,6 +1,6 @@
-package controllers
+package com.github.gannicottb.controllers
 
-import model.{Matchup, Type}
+import com.github.gannicottb.model.{Matchup, Type}
 import zhttp.http.{Request, Response, Status, URL}
 import zio.{Task, UIO}
 

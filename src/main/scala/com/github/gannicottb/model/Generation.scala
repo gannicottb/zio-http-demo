@@ -1,4 +1,4 @@
-package model
+package com.github.gannicottb.model
 
 /** There are three Generations that we care about. I, II, and VI.
   * @param id

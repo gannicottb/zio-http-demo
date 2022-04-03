@@ -1,3 +1,5 @@
+package com.github.gannicottb
+
 import zhttp.service.{ChannelFactory, EventLoopGroup}
 import zio.stream.ZStream
 
