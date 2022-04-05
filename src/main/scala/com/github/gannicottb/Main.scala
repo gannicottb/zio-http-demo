@@ -12,8 +12,8 @@ import java.io.IOException
 object Main extends ZIOAppDefault {
 
   val pokemonApi: HttpApp[Console, IOException] = Http.collectZIO[Request] {
-    case req @ Method.GET -> !! / "matchup" => MatchupController.show(req)
-    case Method.GET -> !! / "type" / id     => TypeController.show(id)
+    case Method.GET -> !! / "matchup" / a / "vs" / d => MatchupController.show(a, d)
+    case Method.GET -> !! / "type" / id              => TypeController.show(id)
   }
 
   val streamingApi = Http.collect[Request] { case Method.GET -> !! / "stream" / search =>
