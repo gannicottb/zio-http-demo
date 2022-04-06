@@ -25,7 +25,7 @@ object MovieAlbumComparisonController {
     Response(
       status = Status.OK,
       data = HttpData.fromStream(
-        mergedStream.take(1000).intersperse("\n")
+        (mergedStream.take(100) ++ Stream("Done.")).intersperse("\n")
       ) // Encoding content using a ZStream
     )
   }
