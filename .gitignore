@@ -8,3 +8,6 @@
 metals.sbt
 project/target
 target/
+data/
+
+.DS_Store

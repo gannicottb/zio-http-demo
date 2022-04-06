@@ -11,7 +11,7 @@ import zio.stream.{Stream, ZPipeline, ZStream}
 
 object IMDB extends DataSource {
   // Downloaded from https://datasets.imdbws.com/
-  def local = Stream.fromFileString("/home/brandon/Downloads/title.akas.tsv.gz")
+  def local = Stream.fromFileString("/Users/brandon/Downloads/title.akas.tsv.gz")
 
   // This doesn't quite work, not sure why yet
   def remote: ZStream[EventLoopGroup with ChannelFactory, Throwable, Byte] = for {
