@@ -21,4 +21,6 @@ object Type extends Enum[Type] {
   case object Psychic extends Type
   case object Ice extends Type
   case object Dragon extends Type
+
+  def random = zio.Random.nextIntBetween(0, values.length).map(values(_))
 }
