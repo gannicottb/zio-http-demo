@@ -1,5 +1,7 @@
 package com.github.gannicottb.model
 
+import Type._
+
 /** Represent the matchup between two types.
   * @param attacker
   * @param defender
@@ -9,24 +11,25 @@ case class Matchup(attacker: Type, defender: Type, multiplier: Double)
 object Matchup {
 
   // Sparse matrix - default to 1 on a miss
-  val chart: Map[String, Map[String, Double]] = Map(
-    "normal" -> Map(
-      "rock" -> 0.5,
-      "ghost" -> 0
+  val chart: Map[Type, Map[Type, Double]] = Map(
+    Normal -> Map(
+      Rock -> 0.5,
+      Ghost -> 0
     ),
-    "fight" -> Map(
-      "normal" -> 2,
-      "flying" -> 0.5,
-      "poison" -> 0.5,
-      "rock" -> 2,
-      "bug" -> 0.5,
-      "ghost" -> 0,
-      "psychic" -> 0.5,
-      "ice" -> 2
+    Fight -> Map(
+      Normal -> 2,
+      Flying -> 0.5,
+      Poison -> 0.5,
+      Rock -> 2,
+      Bug -> 0.5,
+      Ghost -> 0,
+      Psychic -> 0.5,
+      Ice -> 2
     )
     // ...and so on
   )
 
-  def compute(attacker: Type, defender: Type): Double =
-    chart.get(attacker.name.toLowerCase).flatMap { _.get(defender.name.toLowerCase) }.getOrElse(1.0)
+  def compute(attacker: Type, defender: Type): Double = {
+    chart.get(attacker).flatMap { _.get(defender) }.getOrElse(1.0)
+  }
 }

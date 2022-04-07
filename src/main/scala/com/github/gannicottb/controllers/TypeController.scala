@@ -7,9 +7,9 @@ import zio.UIO
 object TypeController {
   def show(id: String) = UIO {
     Type
-      .ofNameInsensitive(id)
+      .withNameInsensitiveOption(id)
       .map { theType =>
-        val thisChart = Matchup.chart(theType.name).mkString("\n")
+        val thisChart = Matchup.chart(theType).mkString("\n")
         println(thisChart)
         Response.text(thisChart)
       }
