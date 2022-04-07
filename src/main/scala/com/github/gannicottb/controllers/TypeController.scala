@@ -10,7 +10,6 @@ object TypeController {
       .withNameInsensitiveOption(id)
       .map { theType =>
         val thisChart = Matchup.chart(theType).mkString("\n")
-        println(thisChart)
         Response.text(thisChart)
       }
       .getOrElse(Response.status(Status.NOT_FOUND))

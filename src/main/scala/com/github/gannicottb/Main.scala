@@ -1,9 +1,9 @@
 package com.github.gannicottb
 
-import com.github.gannicottb.controllers.{MatchupController, MovieAlbumComparisonController, TypeController}
+import com.github.gannicottb.controllers._
 import zhttp.http._
 import zhttp.service.Server
-import zio.{Console, ZEnv, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio._
 
 import java.io.IOException
 
@@ -11,9 +11,10 @@ import java.io.IOException
   */
 object Main extends ZIOAppDefault {
 
-  val pokemonApi: HttpApp[Console, IOException] = Http.collectZIO[Request] {
+  val pokemonApi: HttpApp[Console with Random with Clock, IOException] = Http.collectZIO[Request] {
     case Method.GET -> !! / "matchup" / a / "vs" / d => MatchupController.show(a, d)
     case Method.GET -> !! / "type" / id              => TypeController.show(id)
+    case Method.GET -> !! / "pokemon" / "random"     => PokemonController.random
   }
 
   val streamingApi = Http.collect[Request] { case Method.GET -> !! / "stream" / search =>
