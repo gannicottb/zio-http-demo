@@ -2,6 +2,7 @@ package com.github.gannicottb.model
 import zio.Random._
 import zio.Clock._
 import java.util.concurrent.TimeUnit
+import java.sql.Time
 
 trait BattleStrategy {
   def nextMove(self: Pokemon, opponent: Pokemon)
@@ -23,8 +24,9 @@ object Stats {
 final case class Pokemon(name: String, stats: Stats, moves: Set[Move], strategy: BattleStrategy)
 object Pokemon {
   def random = for {
-    randomIndex <- nextInt
-    name <- currentTime(TimeUnit.MILLISECONDS).map(t => s"Mon#${t + randomIndex}")
+    name <- currentTime(TimeUnit.MILLISECONDS).zip(nextInt).map { case (time, i) =>
+      s"Mon#${time + i}"
+    }
     stats <- Stats.random
     moves <- Move.random
     strategy = Simple

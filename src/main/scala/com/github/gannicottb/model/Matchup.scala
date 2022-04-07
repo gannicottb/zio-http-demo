@@ -11,6 +11,7 @@ case class Matchup(attacker: Type, defender: Type, multiplier: Double)
 object Matchup {
 
   // Sparse matrix - default to 1 on a miss
+  // source: https://bulbapedia.bulbagarden.net/wiki/Type/Type_chart#Generation_I
   val chart: Map[Type, Map[Type, Double]] = Map(
     Normal -> Map(
       Rock -> 0.5,
@@ -25,7 +26,15 @@ object Matchup {
       Ghost -> 0,
       Psychic -> 0.5,
       Ice -> 2
+    ),
+    Flying -> Map(
+      Fight -> 2,
+      Rock -> .5,
+      Bug -> 2,
+      Grass -> 2,
+      Electric -> .5
     )
+
     // ...and so on
   )
 
