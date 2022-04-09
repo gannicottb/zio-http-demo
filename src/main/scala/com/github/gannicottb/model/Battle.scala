@@ -24,7 +24,6 @@ case class Step(battlers: Map[Int, Pokemon], moveResult: Option[MoveResult]) {
   }
 }
 
-case class Turn(number: Int, steps: Seq[Step])
 case class Battle(pokemon1: Pokemon, pokemon2: Pokemon) {
   val MAX_TURNS = 20
 
@@ -39,15 +38,13 @@ case class Battle(pokemon1: Pokemon, pokemon2: Pokemon) {
     ZStream
       .paginate((1, Seq[Step](firstStep))) {
         case (turn, prevSteps) if turn > MAX_TURNS =>
-          (turn, prevSteps) -> None
+          (turn, prevSteps) -> None // Enforce a turn limit
         case (turn, prevSteps) =>
           val battlers = prevSteps.last.battlers
-          val p1 = battlers(1)
-          val p2 = battlers(2)
+          val (p1, p2) = (battlers(1), battlers(2))
           println(s"Processing Turn $turn. Pokemon1 has ${p1.currentHP}. Pokemon2 has ${p2.currentHP}")
           val (p1Move, p2Move) = (p1.nextMove(p2), p2.nextMove(p1))
           println(s"p1 will use ${p1Move.name}. p2 will use ${p2Move.name}")
-          // We then figure out which one goes first. Hardcoded for now.
           val inOrder = Seq(
             (1, p1Move, 2),
             (2, p2Move, 1)
@@ -55,7 +52,7 @@ case class Battle(pokemon1: Pokemon, pokemon2: Pokemon) {
           val stepsThisTurn = inOrder.foldLeft(Seq[Step]()) { case (steps, (attackerId, move, defenderId)) =>
             val lastStep = steps.lastOption.getOrElse(prevSteps.last)
             if (lastStep.battlers.values.exists(_.hasFainted)) {
-              steps
+              steps // No more steps if someone's fainted
             } else {
               val damageDone = move.calculateDamage(battlers(attackerId), battlers(defenderId))
               val moveResult = MoveResult(attackerId, move, defenderId, Some(damageDone))
@@ -63,7 +60,6 @@ case class Battle(pokemon1: Pokemon, pokemon2: Pokemon) {
               val updatedBattlers = lastStep.battlers.updatedWith(defenderId) { p =>
                 p.map(_.updateHP(-moveResult.damageDone.getOrElse(0)))
               }
-
               steps :+ Step(updatedBattlers, Some(moveResult))
             }
           }
@@ -73,9 +69,9 @@ case class Battle(pokemon1: Pokemon, pokemon2: Pokemon) {
           )
 
           if (stepsThisTurn.last.battlers.values.exists(_.hasFainted)) {
-            (turn, stepsThisTurn) -> None
+            (turn, stepsThisTurn) -> None // this is the last step
           } else {
-            (turn, stepsThisTurn) -> Some((turn + 1, stepsThisTurn))
+            (turn, stepsThisTurn) -> Some((turn + 1, stepsThisTurn)) // the battle continues
           }
       }
       .flatMap { case (turn, steps) =>

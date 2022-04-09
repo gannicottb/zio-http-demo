@@ -19,8 +19,10 @@ case class Move(name: String, pokeType: Type, power: Int, accuracy: Double, pp: 
       case Physical => self.stats.attack / opponent.stats.defense
       case Special  => self.stats.specialAttack / opponent.stats.specialDefense
     }
+    val STAB: Double = if (pokeType == self.pokeType) 1.5 else 1.0
+    val effectiveness: Double = Matchup.compute(self.pokeType, opponent.pokeType)
 
-    (levelComponent * power * attackDefenseComparison) / 50 + 2
+    (((levelComponent * power * attackDefenseComparison) / 50 + 2).toDouble * STAB * effectiveness).toInt
   }
 }
 
