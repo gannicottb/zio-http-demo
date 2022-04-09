@@ -18,11 +18,7 @@ object Main extends ZIOAppDefault {
     case Method.GET -> !! / "battle" / "random"      => BattleController.random
   }
 
-  val streamingApi = Http.collect[Request] { case Method.GET -> !! / "stream" / search =>
-    MovieAlbumComparisonController.show(search)
-  }
-
   // Run it like any simple app
   override val run: ZIO[ZEnv with ZIOAppArgs, Throwable, Nothing] =
-    Server.start(8090, pokemonApi ++ streamingApi)
+    Server.start(8090, pokemonApi)
 }

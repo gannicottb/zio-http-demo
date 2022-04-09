@@ -15,7 +15,15 @@ case object Simple extends BattleStrategy {
   }
 }
 
-case class Stats(hp: Int, attack: Int, specialAttack: Int, defense: Int, specialDefense: Int)
+case class Stats(hp: Int, attack: Int, specialAttack: Int, defense: Int, specialDefense: Int) {
+  override def toString = Seq(
+    s"HP: $hp",
+    s"Attack: $attack",
+    s"Defense: $defense",
+    s"Sp. Atk: $specialAttack",
+    s"Sp. Def: $specialDefense"
+  ).mkString("\n")
+}
 object Stats {
   def random = for {
     hp <- nextIntBetween(30, 50)
@@ -32,17 +40,37 @@ final case class Pokemon(
     level: Int,
     stats: Stats,
     moves: List[Move],
-    strategy: BattleStrategy
-)
+    strategy: BattleStrategy,
+    currentHP: Int
+    // status (sleep, confused, burn, freeze, etc)
+) {
+  // Return a copy of this Pokemon with full HP
+  def atMaxHP: Pokemon = copy(currentHP = stats.hp)
+
+  def updateHP(change: Int): Pokemon = copy(currentHP = currentHP + change)
+
+  // Check to see if we've fainted
+  def hasFainted: Boolean = currentHP <= 0
+
+  def nextMove(opponent: Pokemon): Move = strategy.nextMove(this, opponent)
+
+  override def toString = Seq(
+    s"$name | Lv.$level ${pokeType.entryName}-type",
+    "Stats:",
+    stats.toString,
+    "Moves:",
+    moves.map(_.name)
+  ).mkString("\n")
+}
 object Pokemon {
   def random = for {
     name <- currentTime(TimeUnit.MILLISECONDS).zip(nextInt).map { case (time, i) =>
-      s"Mon#${time + i}"
+      s"Mon#${(time + i) / 10000000}"
     }
     pokeType <- Type.random
     level <- nextIntBetween(5, 10)
     stats <- Stats.random
     moves <- Move.random
     strategy = Simple
-  } yield Pokemon(name, pokeType, level, stats, moves, strategy)
+  } yield Pokemon(name, pokeType, level, stats, moves, strategy, stats.hp)
 }

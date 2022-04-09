@@ -7,11 +7,13 @@ object BattleController {
   def random = for {
     p1 <- Pokemon.random
     p2 <- Pokemon.random
-    stream = Battle(p1, p2).unfold.map(_.toString).intersperse("\n")
+    header = Seq(p1.toString, "!!--VS--!!", p2.toString).mkString("\n")
+    footer = "The Battle is over!"
+    stream = Battle(p1, p2).simulate
   } yield Response(
     status = Status.OK,
     data = HttpData.fromStream(
-      Stream(s"$p1 vs $p2\n") ++ stream
+      (Stream(header) ++ stream ++ Stream(footer)).intersperse("\n")
     )
   )
 }
