@@ -15,6 +15,7 @@ object Main extends ZIOAppDefault {
     case Method.GET -> !! / "matchup" / a / "vs" / d => MatchupController.show(a, d)
     case Method.GET -> !! / "type" / id              => TypeController.show(id)
     case Method.GET -> !! / "pokemon" / "random"     => PokemonController.random
+    case Method.GET -> !! / "battle" / "random"      => BattleController.random
   }
 
   val streamingApi = Http.collect[Request] { case Method.GET -> !! / "stream" / search =>
