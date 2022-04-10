@@ -33,9 +33,34 @@ object Matchup {
       Bug -> 2,
       Grass -> 2,
       Electric -> .5
-    )
-
-    // ...and so on
+    ),
+    Poison -> Map(
+      Poison -> 0.5,
+      Ground -> 0.5,
+      Rock -> 0.5,
+      Bug -> 2.0,
+      Ghost -> 0.5,
+      Grass -> 2.0
+    ),
+    Ground -> Map(
+      Flying -> 0,
+      Poison -> 2.0,
+      Rock -> 2.0,
+      Bug -> 0.5,
+      Fire -> 2.0,
+      Grass -> .5,
+      Electric -> 2.0
+    ),
+    Rock -> Map(),
+    Bug -> Map(),
+    Ghost -> Map(),
+    Fire -> Map(),
+    Water -> Map(),
+    Grass -> Map(),
+    Electric -> Map(),
+    Psychic -> Map(),
+    Ice -> Map(),
+    Dragon -> Map()
   )
 
   def compute(attacker: Type, defender: Type): Double = {

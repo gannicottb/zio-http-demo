@@ -15,13 +15,14 @@ case object Simple extends BattleStrategy {
   }
 }
 
-case class Stats(hp: Int, attack: Int, specialAttack: Int, defense: Int, specialDefense: Int) {
-  override def toString = Seq(
+case class Stats(hp: Int, attack: Int, specialAttack: Int, defense: Int, specialDefense: Int, speed: Int) {
+  def prettyPrint = Seq(
     s"HP: $hp",
     s"Attack: $attack",
     s"Defense: $defense",
     s"Sp. Atk: $specialAttack",
-    s"Sp. Def: $specialDefense"
+    s"Sp. Def: $specialDefense",
+    s"Speed: $speed"
   ).mkString("\n")
 }
 object Stats {
@@ -31,7 +32,8 @@ object Stats {
     sa <- nextIntBetween(10, 40)
     d <- nextIntBetween(10, 30)
     sd <- nextIntBetween(1, 30)
-  } yield Stats(hp, a, sa, d, sd)
+    spd <- nextIntBetween(30, 50)
+  } yield Stats(hp, a, sa, d, sd, spd)
 }
 
 final case class Pokemon(
@@ -54,10 +56,12 @@ final case class Pokemon(
 
   def nextMove(opponent: Pokemon): Move = strategy.nextMove(this, opponent)
 
-  override def toString = Seq(
+  def nextPlan(opponent: Pokemon): Plan = Plan(this, nextMove(opponent), opponent)
+
+  def prettyPrint = Seq(
     s"$name | Lv.$level ${pokeType.entryName}-type",
     "Stats:",
-    stats.toString,
+    stats.prettyPrint,
     "Moves:",
     moves.map(_.name)
   ).mkString("\n")
