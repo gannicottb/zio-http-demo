@@ -1,13 +1,8 @@
 package com.github.gannicottb.model
-import Type._
-
+import com.github.gannicottb.model.Type._
 import enumeratum._
-import com.github.gannicottb.model.MoveCategory.Physical
-import com.github.gannicottb.model.MoveCategory.Special
-import zio.ZIO
 import zio.Random._
 import zio.UIO
-import zio.Random
 
 sealed trait MoveCategory extends EnumEntry
 object MoveCategory extends Enum[MoveCategory] {
@@ -16,53 +11,70 @@ object MoveCategory extends Enum[MoveCategory] {
   case object Special extends MoveCategory
 }
 
-case class Move(name: String, pokeType: Type, category: MoveCategory, power: Int, accuracy: Double, pp: Int) {
-  // def calculateDamage(self: Pokemon, opponent: Pokemon): Int = {
-  //   val levelComponent = ((2 * self.level / 5) + 2)
-  //   val attackDefenseComparison = category match {
-  //     case Physical => self.stats.attack / opponent.stats.defense
-  //     case Special  => self.stats.specialAttack / opponent.stats.specialDefense
-  //   }
-  //   val STAB: Double = if (pokeType == self.pokeType) 1.5 else 1.0
-  //   val effectiveness: Double = Matchup.compute(self.pokeType, opponent.pokeType)
+final case class Move(name: String, pokeType: Type, category: MoveCategory, power: Int, accuracy: Double, pp: Int) {
+  import MoveCategory._
 
-  //   (((levelComponent * power * attackDefenseComparison) / 50 + 2).toDouble * STAB * effectiveness).toInt
-  // }
+  // For a tuple of battling Pokemon and a boolean telling us which is which, generate the next Step
+  def resolve(battlers: (Pokemon, Pokemon), p1Attacking: Boolean) = {
+    // Assume that the battlers are provided in p1/p2 order
+    // Swap them if needed (and then swap again at the end)
+    def normalize(tup: (Pokemon, Pokemon)) = if (p1Attacking) tup else tup.swap
 
-  def calculateOutcome(self: Pokemon, opponent: Pokemon): ZIO[Random, NoSuchElementException, Outcome] = {
+    val (self, foe) = normalize(battlers)
+    val description = Seq(s"${self.name} used $name!")
     for {
       doesHit <- nextDouble.map(_ <= accuracy)
-      (damage, description) <-
-        if (!doesHit) UIO(None -> Some("The attack missed!"))
-        else {
+      step <-
+        if (doesHit) {
           nextDoubleBetween(.85, 1.0).map { randomFactor =>
-            val levelComponent = ((2 * self.level / 5) + 2)
-            val attackDefenseComparison = category match {
-              case Physical => self.stats.attack / opponent.stats.defense
-              case Special  => self.stats.specialAttack / opponent.stats.specialDefense
+            val levelComponent: Int = (2 * self.level / 5) + 2
+            val attackDefenseComparison: Int = category match {
+              case Physical => self.stats.attack / foe.stats.defense
+              case Special  => self.stats.specialAttack / foe.stats.specialDefense
             }
             val STAB: Double = if (pokeType == self.pokeType) 1.5 else 1.0
-            val effectiveness: Double = Matchup.compute(self.pokeType, opponent.pokeType)
+            val effectiveness: Double = Matchup.compute(self.pokeType, foe.pokeType)
             val baseDamage = ((levelComponent * power * attackDefenseComparison) / 50 + 2)
 
-            val damage =
-              Some((baseDamage.toDouble * STAB * effectiveness * randomFactor).toInt)
-            val description = effectiveness match {
+            val changeToFoe =
+              Some((-baseDamage.toDouble * STAB * effectiveness * randomFactor).toInt)
+            val changeToSelf = None // for now (Take Down, Leech Life)
+
+            // Update the pokemon
+            val battlersAfterDamage = (
+              self.updateHP(changeToSelf.getOrElse(0)),
+              foe.updateHP(changeToFoe.getOrElse(0))
+            )
+            // Assemble the recap
+            val criticalMsg = None // for now
+            val effectiveMsg = effectiveness match {
               case 2.0 => Some("It was super effective!")
-              case 0.5 => Some("It's not every effective...")
+              case 0.5 => Some("It's not very effective...")
               case _   => None
             }
-            damage -> description
-          }
-        }
-    } yield Outcome(
-      self,
-      opponent,
-      damage,
-      description
-    )
-  }
+            val foeDamageMsg = changeToFoe.map(c =>
+              if (c < 0) s"${foe.name} took ${-changeToFoe.getOrElse(0)} damage."
+              else s"${foe.name} gained ${changeToFoe.getOrElse(0)} HP!"
+            )
+            val (newP1, newP2) = normalize(battlersAfterDamage)
+            val hpMsg = Seq(newP1, newP2)
+              .map(pokemon => s"${pokemon.name}: ${pokemon.currentHP}/${pokemon.stats.hp}")
+              .mkString("\t||\t")
+            val finalDescription = description ++ Seq(
+              effectiveMsg,
+              criticalMsg,
+              foeDamageMsg
+            ).collect { case Some(msg) => msg } ++
+              Seq("-" * 10, hpMsg, "-" * 10)
 
+            Step(newP1, newP2, this, finalDescription.mkString("\n"))
+          }
+        } else {
+          val finalDescription = (description :+ "The attack missed!").mkString("\n")
+          UIO(Step(battlers._1, battlers._2, this, finalDescription))
+        }
+    } yield step
+  }
 }
 
 object Move {

@@ -8,9 +8,13 @@ object BattleController {
   def random: ZIO[Clock with Random, Nothing, Response] = for {
     p1 <- Pokemon.random
     p2 <- Pokemon.random
-    header = Seq(p1.prettyPrint, "!!--VS--!!", p2.prettyPrint).mkString("\n")
+    header = Seq(p1.prettyPrint, "!!--VS--!!", p2.prettyPrint, "!!--BATTLE--!!").mkString("\n")
     footer = "The Battle is over!"
-    stream = Battle(p1, p2).simulate2.provideEnvironment(ZEnvironment.default)
+    stream = Battle(p1, p2).simulate
+      .flatMap { case Turn(number, steps) =>
+        Stream(s"\nTURN $number:") ++ Stream.fromIterable(steps.map(_.prettyPrint))
+      }
+      .provideLayer(Random.live)
   } yield Response(
     status = Status.OK,
     data = HttpData.fromStream(

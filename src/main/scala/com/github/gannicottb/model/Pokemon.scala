@@ -1,21 +1,19 @@
 package com.github.gannicottb.model
-import zio.Random._
 import zio.Clock._
+import zio.Random._
+
 import java.util.concurrent.TimeUnit
-import java.sql.Time
 
 trait BattleStrategy {
   def nextMove(self: Pokemon, opponent: Pokemon): Move
 }
 case object Simple extends BattleStrategy {
   def nextMove(self: Pokemon, opponent: Pokemon): Move = {
-    // Step 1: do we have super effective move(s)?
-    // val superEffective = self.moves.filter(m => Matchup.compute(m.pokeType, opponent.pokeType) == 2.0)
-    self.moves.head
+    self.moves.head // I did say it was simple...
   }
 }
 
-case class Stats(hp: Int, attack: Int, specialAttack: Int, defense: Int, specialDefense: Int, speed: Int) {
+final case class Stats(hp: Int, attack: Int, specialAttack: Int, defense: Int, specialDefense: Int, speed: Int) {
   def prettyPrint = Seq(
     s"HP: $hp",
     s"Attack: $attack",
@@ -37,6 +35,7 @@ object Stats {
 }
 
 final case class Pokemon(
+    id: Long,
     name: String,
     pokeType: Type,
     level: Int,
@@ -54,9 +53,9 @@ final case class Pokemon(
   // Check to see if we've fainted
   def hasFainted: Boolean = currentHP <= 0
 
-  def nextMove(opponent: Pokemon): Move = strategy.nextMove(this, opponent)
+  def nextMove(foe: Pokemon): Move = strategy.nextMove(this, foe)
 
-  def nextPlan(opponent: Pokemon): Plan = Plan(this, nextMove(opponent), opponent)
+  def nextPlan(foe: Pokemon): Plan = Plan(this, nextMove(foe), foe)
 
   def prettyPrint = Seq(
     s"$name | Lv.$level ${pokeType.entryName}-type",
@@ -68,13 +67,14 @@ final case class Pokemon(
 }
 object Pokemon {
   def random = for {
-    name <- currentTime(TimeUnit.MILLISECONDS).zip(nextInt).map { case (time, i) =>
-      s"Mon#${(time + i) / 10000000}"
+    id <- currentTime(TimeUnit.MILLISECONDS).zip(nextInt).map { case (time, i) =>
+      (time + i) / 100_000_000
     }
+    name <- Name.random.map(_ + s"#$id")
     pokeType <- Type.random
     level <- nextIntBetween(5, 10)
     stats <- Stats.random
     moves <- Move.random
     strategy = Simple
-  } yield Pokemon(name, pokeType, level, stats, moves, strategy, stats.hp)
+  } yield Pokemon(id, name, pokeType, level, stats, moves, strategy, stats.hp)
 }
