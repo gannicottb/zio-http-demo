@@ -53,7 +53,7 @@ final case class Move(name: String, pokeType: Type, category: MoveCategory, powe
               case _   => None
             }
             val foeDamageMsg = changeToFoe.map(c =>
-              if (c < 0) s"${foe.name} took ${-changeToFoe.getOrElse(0)} damage."
+              if (c <= 0) s"${foe.name} took ${-changeToFoe.getOrElse(0)} damage."
               else s"${foe.name} gained ${changeToFoe.getOrElse(0)} HP!"
             )
             val (newP1, newP2) = normalize(battlersAfterDamage)

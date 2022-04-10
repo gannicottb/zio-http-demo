@@ -9,7 +9,6 @@ import Type._
   */
 case class Matchup(attacker: Type, defender: Type, multiplier: Double)
 object Matchup {
-
   // source: https://bulbapedia.bulbagarden.net/wiki/Type/Type_chart#Generation_I
   def compactChart(attacker: Type, defender: Type) = {
     (attacker, defender) match {
