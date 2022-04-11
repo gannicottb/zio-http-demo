@@ -3,21 +3,25 @@ package com.github.gannicottb.model
 import zio.{Random, UIO, ZIO}
 import zio.stream._
 
-/** A Battle is between two Pokemon. (for now) Each Pokemon has stats, moves, etc Simulating the battle produces a
-  * Stream of Steps But the Battle proceeds in a series of Turns. A Turn has a number and a sequence of Steps
+/** A Battle is between two Pokemon. (for now) 
+  *
+  * Each Pokemon has stats, moves, etc Simulating the battle produces a Stream of Turns.
+  *
+  * A Turn has a number and a sequence of Steps
   *
   * During a Turn, Steps are made like this:
   *
-  * Each/both pokemon choose their next Move based on the current state (theirs and their foe's) This selection is a
-  * Plan, and it contains the attacker, the attacker's Move, and the defender Plans are then resolved in priority order
+  * Both pokemon choose their next Move based on the current state (theirs and their foe's)
+  *
+  * This selection is a Plan, and it contains the attacker, the attacker's Move, and the defender 
+  *
+  * Plans are then resolved in priority order.
+  * 
   * Resolving a Plan means executing its Move and changing the battle state, resulting in a Step.
   *
-  * The use of paginate is maybe a little weird, but the idea is that we want to maintain some state while we
-  * recursively generate results.
   * @param pokemon1
   * @param pokemon2
   */
-case class Turn(number: Int, steps: Seq[Step] = Seq[Step]())
 case class Battle(pokemon1: Pokemon, pokemon2: Pokemon) {
   val MAX_TURNS = 20
   def simulate = {
@@ -38,7 +42,7 @@ case class Battle(pokemon1: Pokemon, pokemon2: Pokemon) {
     }
   }
 }
-
+case class Turn(number: Int, steps: Seq[Step] = Seq[Step]())
 case class Step(pokemon1: Pokemon, pokemon2: Pokemon, move: Move, description: String) {
   def isOver: Boolean = Seq(pokemon1, pokemon2).exists(_.hasFainted)
 
